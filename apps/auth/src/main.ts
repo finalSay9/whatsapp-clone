@@ -14,6 +14,7 @@ async function bootstrap() {
       }
     }
   );
-  await app.listen(process.env.port ?? 3000);
+  await app.listen();
+  console.log("Auth microservice listening on TCP port 3001");
 }
 bootstrap();

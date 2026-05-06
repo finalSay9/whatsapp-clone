@@ -10,3 +10,4 @@ coverage
 *.tsbuildinfo
 *.swp
 *.swo
+/generated/prisma

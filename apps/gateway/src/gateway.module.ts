@@ -7,7 +7,13 @@ import { ConfigModule } from '@nestjs/config';
 
 
 @Module({
-  imports: [],
+  imports: [
+    ConfigModule.forRoot({
+      isGlobal: true,
+      envFilePath: '.env'
+
+    })
+  ],
   controllers: [GatewayController],
   providers: [GatewayService],
 })

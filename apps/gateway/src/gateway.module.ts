@@ -22,9 +22,7 @@ import { ConfigModule } from '@nestjs/config';
           host: 'localhost',
           port: 3001
         }
-
       }
-
     ])
   ],
   controllers: [GatewayController],

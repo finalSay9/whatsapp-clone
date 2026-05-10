@@ -11,8 +11,21 @@ import { ConfigModule } from '@nestjs/config';
     ConfigModule.forRoot({
       isGlobal: true,
       envFilePath: '.env'
+    }),
 
-    })
+    //register the auth service as the TCP CLIENT
+    ClientsModule.register([
+      {
+        name: 'AUTH_SERVICE',//INJECT TOKEN
+        transport: Transport.TCP,
+        options: {
+          host: 'localhost',
+          port: 3001
+        }
+
+      }
+
+    ])
   ],
   controllers: [GatewayController],
   providers: [GatewayService],

@@ -8,6 +8,10 @@ import {
  } from '@nestjs/common';
 import { ClientProxy } from '@nestjs/microservices';
 import { GatewayService } from './gateway.service';
+import { ApiTags, ApiOperation, ApiResponse } from '@nestjs/swagger';
+import { firstValueFrom } from 'rxjs';
+import { RegisterDto } from './dto/register.dto';
+import { LoginDto } from './dto/login.dto';
 
 
 @Controller()

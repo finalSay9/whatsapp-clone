@@ -4,7 +4,8 @@
     "experimentalDecorators": true,
     "emitDecoratorMetadata": true,
     "declaration": false,
-    "outDir": "../../dist/apps/auth"
+    "outDir": "../../dist/apps/auth",
+    "rootDir": "."
   },
   "include": ["src/**/*"],
   "exclude": ["node_modules", "dist", "test", "**/*spec.ts"]

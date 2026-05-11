@@ -3,7 +3,7 @@
   "compilerOptions": {
     "declaration": true,
     "outDir": "../../dist/libs/common",
-    "rootDir": "."
+    "rootDir": "../.."
   },
   "exclude": ["node_modules", "dist", "test", "**/*spec.ts"]
 }

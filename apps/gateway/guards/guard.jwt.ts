@@ -4,4 +4,5 @@ import {
     CanActivate,
     UnauthorizedException,
     Inject
-} from '@nestjs/common'
+} from '@nestjs/common';
+import { ClientProxy } from '@nestjs/microservices';

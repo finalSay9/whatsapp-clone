@@ -25,12 +25,25 @@ export class JwtGuard implements CanActivate {
 
         //then you tell auth service to check if provided token is valid
         try {
-            const result = await firstValueFrom({
+            const result = await firstValueFrom(
                 this.authClient.send({cmd: 'verify_token'}, {token})
-            })
-        } catch (error) {
+            );
             
+            //if invalid token is provided
+            if(!result.valid) {
+                throw new UnauthorizedException('invalid token')
+            }
+
+             // 4. attach user payload to request for use in controllers
+            request['user'] = result.payload;
+            return true;
+        } catch (error) {
+             throw new UnauthorizedException('Invalid or expired token');   
         }
+    }
+
+    private extractToken(request: Request): string | null {
+        
     }
 
 

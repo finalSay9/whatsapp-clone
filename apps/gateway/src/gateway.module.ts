@@ -20,7 +20,7 @@ import { ConfigModule } from '@nestjs/config';
         transport: Transport.TCP,
         options: {
           host: 'localhost',
-          port: 3001
+          port: 3006
         }
       }
     ])

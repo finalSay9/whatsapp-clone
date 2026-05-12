@@ -26,6 +26,6 @@ import { ConfigModule } from '@nestjs/config';
     ])
   ],
   controllers: [GatewayController],
-  providers: [GatewayService],
+  providers: [GatewayService, JwtGuard],
 })
 export class GatewayModule {}

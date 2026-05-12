@@ -15,11 +15,21 @@ export class JwtGuard implements CanActivate {
     canActivate(context: ExecutionContext): Promise<boolean> {
         const request = context.switchToHttp().getRequest<Request>()
         
-        //extract token from the authorization header
+        //firstly you extract token from the authorization header by calling
+        //the helper func extractToken()
         const token = this.extractToken(request)
         //if token not provided
         if(!token) {
             throw new UnauthorizedException('No Token Provide')
+        }
+
+        //then you tell auth service to check if provided token is valid
+        try {
+            const result = await firstValueFrom({
+                this.authClient.send({cmd: 'verify_token'}, {token})
+            })
+        } catch (error) {
+            
         }
     }
 

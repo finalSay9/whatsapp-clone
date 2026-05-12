@@ -5,14 +5,17 @@ import {
   HttpCode,
   HttpStatus,
   Inject,
-  Post
+  Post,
+  UseGuards
  } from '@nestjs/common';
 import { ClientProxy } from '@nestjs/microservices';
 import { GatewayService } from './gateway.service';
-import { ApiTags, ApiOperation, ApiResponse } from "@nestjs/swagger";
+import { ApiTags, ApiOperation, ApiResponse, ApiBearerAuth } from "@nestjs/swagger";
 import { firstValueFrom } from "rxjs";
 import { RegisterDto } from "./dto/register.dto";
 import { LoginDto } from "./dto/login.dto";
+import { GetUser } from '../decoarators/get-user.decorator';
+import { JwtGuard } from '../guards/guard.jwt';
 
 
 @ApiTags("Auth")
@@ -42,5 +45,19 @@ export class GatewayController {
   @ApiResponse({ status: 401, description: "Invalid credentials" })
   async login(@Body() dto: LoginDto) {
     return firstValueFrom(this.authClient.send({ cmd: "login" }, dto));
+  }
+
+  // 👇 protected route — requires valid JWT
+  @Get("me")
+  @UseGuards(JwtGuard)
+  @ApiBearerAuth("access-token")
+  @ApiOperation({ summary: "Get current logged in user" })
+  @ApiResponse({ status: 200, description: "Returns current user" })
+  @ApiResponse({ status: 401, description: "Unauthorized" })
+  getMe(@GetUser() user: any) {
+    return {
+      message: "You are authenticated",
+      user,
+    };
   }
 }

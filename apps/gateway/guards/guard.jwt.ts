@@ -12,7 +12,7 @@ import { Request } from 'express';
 @Injectable()
 export class JwtGuard implements CanActivate {
     constructor(@Inject('AUTH_SERVICE') private readonly authClient: ClientProxy){}
-    canActivate(context: ExecutionContext): Promise<boolean> {
+    async canActivate(context: ExecutionContext): Promise<boolean> {
         const request = context.switchToHttp().getRequest<Request>()
         
         //firstly you extract token from the authorization header by calling
@@ -47,8 +47,7 @@ export class JwtGuard implements CanActivate {
         if(!authHeader) return null
 
         const [type, token] = authHeader.split(' ');
-        
+        return type === 'Bearer' ? token: null
+
     }
-
-
 }

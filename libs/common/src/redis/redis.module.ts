@@ -10,6 +10,11 @@ export const REDIS_SUBSCRIBER = 'REDIS_SUBSCRIBER';
 @Module({
     providers: [{
         provide: REDIS_CLIENT,
-        useFactory: (config: ConfigService)
+        useFactory: (config: ConfigService) => {
+            return new Redis({
+                host: config.get('REDIS_HOST', 'localhost'),
+                port: config.get<number>('REDIS_PORT', 6379)
+            });
+        }
     }]
 })

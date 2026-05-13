@@ -8,5 +8,8 @@ export const REDIS_SUBSCRIBER = 'REDIS_SUBSCRIBER';
 
 @Global()
 @Module({
-    
+    providers: [{
+        provide: REDIS_CLIENT,
+        useFactory: (config: ConfigService)
+    }]
 })

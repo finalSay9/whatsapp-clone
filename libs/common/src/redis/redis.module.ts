@@ -1,3 +1,12 @@
 import { Global, Module } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
 import Redis from 'ioredis';
+
+
+export const REDIS_CLIENT = 'REDIS_CLIENT';
+export const REDIS_SUBSCRIBER = 'REDIS_SUBSCRIBER';
+
+@Global()
+@Module({
+    
+})

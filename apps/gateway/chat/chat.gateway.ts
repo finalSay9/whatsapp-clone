@@ -30,4 +30,13 @@ export class ChatGate
 
     private logger = new Logger('ChatGatway')
 
+    //track which userID maps to which socketID
+    private userSocketMap = new Map<string, string>()
+
+    constructor(
+        @Inject('AUTH_SERVICE') private readonly authClient: ClientProxy,
+        @Inject('REDIS_CLIENT') private readonly redisClient: REDIS_CLIENT,
+        @Inject('REDIS_SUBSCRIBER') private readonly redisSub: REDIS_SUBSCRIBER
+    ){}
+
 }

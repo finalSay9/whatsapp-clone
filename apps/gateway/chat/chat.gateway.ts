@@ -1,5 +1,5 @@
 import {
-  WebSockerServer,
+  WebSocketServer,
   WebSocketGateway,
   SubscribeMessage,
   MessageBody,
@@ -16,4 +16,18 @@ import Redis from "ioredis";
 import { REDIS_CLIENT, REDIS_SUBSCRIBER } from "@app/common";
 
 
-@WebSocketGateway()
+@WebSocketGateway({
+    cors: {
+        origin: '*'
+    },
+    namespace: 'chat'
+})
+export class ChatGate
+ implements OnGatewayInit, OnGatewayeConnection, OnGatewayeDisconnect {
+
+    @WebSocketServer()
+    server: Server;
+
+    private logger = new Logger('ChatGatway')
+
+}

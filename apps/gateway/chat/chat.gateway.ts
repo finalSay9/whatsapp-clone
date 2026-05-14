@@ -39,4 +39,14 @@ export class ChatGate
         @Inject('REDIS_SUBSCRIBER') private readonly redisSub: REDIS_SUBSCRIBER
     ){}
 
+    afterInit() {
+        this.logger.log('Websocket Gateway Initialized')
+        
+        //subscribe to redis for incoming messages
+        this.redisSub.Subscribe('new message', (err) => {
+            if(err) this.logger.error('Redis subscribe error', err)
+        })
+        
+    }
+
 }

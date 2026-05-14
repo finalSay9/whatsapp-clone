@@ -65,10 +65,13 @@ export class ChatGate
                 }
             }
         
-        });
+        });    
+    }
 
-       
-        
+    //runs while clients connect
+    async handleConnection(client: Socket) {
+        //extract token from a handshake
+        const token = client.handshake
     }
 
 }

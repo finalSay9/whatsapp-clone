@@ -58,7 +58,10 @@ export class ChatGate
                 if(recipientSocketId) {
                     this.server
                     .to(recipientSocketId)
-                    .emit('new message', data)
+                    .emit('new message', data);
+                this.logger.log(`message delivered to  ${data.recipientId}`)
+                } else {
+                    this.logger.log(`Recipient ${data.recipientId} is offline`);
                 }
             }
         

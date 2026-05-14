@@ -71,7 +71,12 @@ export class ChatGate
     //runs while clients connect
     async handleConnection(client: Socket) {
         //extract token from a handshake
-        const token = client.handshake
+        const token = client.handshake.auth?.token ||
+         client.handshake.headers?.authourization.split(' ')[1]
+
+         if(!token) {
+            throw new UnauthorizedException('No Token Provided')
+         }
     }
 
 }

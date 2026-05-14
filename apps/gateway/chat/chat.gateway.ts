@@ -50,9 +50,21 @@ export class ChatGate
         //when redis recieves a messages deliver it via websockets
         this.redisSub.on('message', (channell, message) => {
             if(channell == 'new message') {
-                const data = JSON.parse(message)
+                const data = JSON.parse(message);
+
+        //find a receipient's socket and deliver
+                const recipientSocketId = this.userSocketMap.get(data.recipientId)
+
+                if(recipientSocketId) {
+                    this.server
+                    .to(recipientSocketId)
+                    .emit('new message', data)
+                }
             }
-        })
+        
+        });
+
+       
         
     }
 

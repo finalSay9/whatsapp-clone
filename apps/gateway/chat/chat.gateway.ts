@@ -45,6 +45,13 @@ export class ChatGate
         //subscribe to redis for incoming messages
         this.redisSub.Subscribe('new message', (err) => {
             if(err) this.logger.error('Redis subscribe error', err)
+        });
+
+        //when redis recieves a messages deliver it via websockets
+        this.redisSub.on('message', (channell, message) => {
+            if(channell == 'new message') {
+                const data = JSON.parse(message)
+            }
         })
         
     }

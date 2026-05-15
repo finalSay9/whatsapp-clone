@@ -1,11 +1,12 @@
+// apps/gateway/src/chat/chat.gateway.ts
 import {
-  WebSocketServer,
   WebSocketGateway,
+  WebSocketServer,
   SubscribeMessage,
   MessageBody,
   ConnectedSocket,
-  OnGatewayeConnection,
-  OnGatewayeDisconnect,
+  OnGatewayConnection,
+  OnGatewayDisconnect,
   OnGatewayInit,
 } from "@nestjs/websockets";
 import { Server, Socket } from "socket.io";
@@ -15,104 +16,102 @@ import { firstValueFrom } from "rxjs";
 import Redis from "ioredis";
 import { REDIS_CLIENT, REDIS_SUBSCRIBER } from "@app/common";
 
-
 @WebSocketGateway({
-    cors: {
-        origin: '*'
-    },
-    namespace: 'chat'
+  cors: {
+    origin: "*", // in production lock this down
+  },
+  namespace: "chat", // ws://localhost:3000/chat
 })
-export class ChatGate
- implements OnGatewayInit, OnGatewayeConnection, OnGatewayeDisconnect {
+export class ChatGateway
+  implements OnGatewayInit, OnGatewayConnection, OnGatewayDisconnect
+{
+  @WebSocketServer()
+  server: Server;
 
-    @WebSocketServer()
-    server: Server;
+  private logger = new Logger("ChatGateway");
 
-    private logger = new Logger('ChatGatway')
+  // track which userId maps to which socketId
+  private userSocketMap = new Map<string, string>();
 
-    //track which userID maps to which socketID
-    private userSocketMap = new Map<string, string>()
+  constructor(
+    @Inject("AUTH_SERVICE") private readonly authClient: ClientProxy,
+    @Inject(REDIS_CLIENT) private readonly redisClient: Redis,
+    @Inject(REDIS_SUBSCRIBER) private readonly redisSub: Redis,
+  ) {}
 
-    constructor(
-        @Inject('AUTH_SERVICE') private readonly authClient: ClientProxy,
-        @Inject('REDIS_CLIENT') private readonly redisClient: REDIS_CLIENT,
-        @Inject('REDIS_SUBSCRIBER') private readonly redisSub: REDIS_SUBSCRIBER
-    ){}
+  afterInit() {
+    this.logger.log("WebSocket Gateway initialized");
 
-    afterInit() {
-        this.logger.log('Websocket Gateway Initialized')
-        
-        //subscribe to redis for incoming messages
-        this.redisSub.Subscribe('new message', (err) => {
-            if(err) this.logger.error('Redis subscribe error', err)
-        });
+    // subscribe to Redis channel for incoming messages
+    this.redisSub.subscribe("new_message", (err) => {
+      if (err) this.logger.error("Redis subscribe error", err);
+    });
 
-        //when redis recieves a messages deliver it via websockets
-        this.redisSub.on('message', (channell, message) => {
-            if(channell == 'new message') {
-                const data = JSON.parse(message);
+    // when Redis receives a message, deliver it via WebSocket
+    this.redisSub.on("message", (channel, message) => {
+      if (channel === "new_message") {
+        const data = JSON.parse(message);
 
-        //find a receipient's socket and deliver
-                const recipientSocketId = this.userSocketMap.get(data.recipientId)
+        // find recipient's socket and deliver
+        const recipientSocketId = this.userSocketMap.get(data.recipientId);
+        if (recipientSocketId) {
+          this.server.to(recipientSocketId).emit("new_message", data);
+          this.logger.log(`Message delivered to ${data.recipientId}`);
+        } else {
+          this.logger.log(`Recipient ${data.recipientId} is offline`);
+        }
+      }
+    });
+  }
 
-                if(recipientSocketId) {
-                    this.server
-                    .to(recipientSocketId)
-                    .emit('new message', data);
-                this.logger.log(`message delivered to  ${data.recipientId}`)
-                } else {
-                    this.logger.log(`Recipient ${data.recipientId} is offline`);
-                }
-            }
-        
-        });    
-    }
+  // runs when a client connects
+  async handleConnection(client: Socket) {
+    try {
+      // 1. extract token from handshake
+      const token =
+        client.handshake.auth?.token ||
+        client.handshake.headers?.authorization?.split(" ")[1];
 
-    //runs while clients connect
-    async handleConnection(client: Socket) {
-        //extract token from a handshake
-        const token = client.handshake.auth?.token ||
-         client.handshake.headers?.authourization.split(' ')[1]
+      if (!token) {
+        throw new UnauthorizedException("No token provided");
+      }
 
-         if(!token) {
-            throw new UnauthorizedException('No Token Provided')
-         }
+      // 2. verify token with Auth Service over TCP
+      const result = await firstValueFrom(
+        this.authClient.send({ cmd: "verify_token" }, { token }),
+      );
 
-         //verify token with auth over tcp
-         const result = await firstValueFrom(
-            this.authClient.send({cmd: 'verify_token'}, {token})
-         )
+      if (!result.valid) {
+        throw new UnauthorizedException("Invalid token");
+      }
 
-         if (!result.valid) {
-           throw new UnauthorizedException("Invalid token");
-         }
+      // 3. attach user to socket
+      client.data.user = result.payload;
+      const userId = result.payload.sub;
 
-         //attach user to socket
-         client.user.data = result.payload
-         const userId = result.payload.Sub
+      // 4. track the connection
+      this.userSocketMap.set(userId, client.id);
 
-         //track the connection
-         this.userSocketMap.set(userId, client.id)
+      // 5. publish online status to Redis
+      await this.redisClient.set(`presence:${userId}`, "online");
+      await this.redisClient.publish(
+        "presence",
+        JSON.stringify({ userId, status: "online" }),
+      );
 
-         //publish online status to redis
-         await this.redisClient.set(`presence:${userId}`, 'online');
-         await this.redisClient.publish(
-            'presence',
-            JSON.stringify({userId, status: 'online'}),
-         );
-           this.logger.log(`Client connected: ${userId} (socket: ${client.id})`);
-      client.emit('connected', { message: 'Successfully connected' });
-
+      this.logger.log(`Client connected: ${userId} (socket: ${client.id})`);
+      client.emit("connected", { message: "Successfully connected" });
     } catch (error) {
       this.logger.warn(`Unauthorized connection attempt — disconnecting`);
       client.disconnect();
     }
-    }
-      // runs when a client disconnects
-    async handleDisconnect(client: Socket) {
-        const userId = client.data.user?.sub
-        
-        iff (userId) {
+  }
+
+  // runs when a client disconnects
+  async handleDisconnect(client: Socket) {
+    const userId = client.data.user?.sub;
+
+    if (userId) {
       // remove from socket map
       this.userSocketMap.delete(userId);
 
@@ -121,6 +120,75 @@ export class ChatGate
         `presence:${userId}`,
         Date.now().toString(), // store last seen timestamp
       );
-    }
 
+      await this.redisClient.publish(
+        "presence",
+        JSON.stringify({ userId, status: "offline" }),
+      );
+
+      this.logger.log(`Client disconnected: ${userId}`);
+    }
+  }
+
+  // handles 'sendMessage' events from clients
+  @SubscribeMessage("sendMessage")
+  async handleSendMessage(
+    @ConnectedSocket() client: Socket,
+    @MessageBody() data: { recipientId: string; content: string },
+  ) {
+    const sender = client.data.user;
+
+    const message = {
+      senderId: sender.sub,
+      senderEmail: sender.email,
+      recipientId: data.recipientId,
+      content: data.content,
+      timestamp: new Date().toISOString(),
+    };
+
+    // publish to Redis — any gateway instance will pick this up
+    await this.redisClient.publish("new_message", JSON.stringify(message));
+
+    this.logger.log(`Message from ${sender.sub} to ${data.recipientId}`);
+
+    // confirm to sender
+    return { status: "sent", timestamp: message.timestamp };
+  }
+
+  // handles 'joinRoom' events — for group chats later
+  @SubscribeMessage("joinRoom")
+  handleJoinRoom(
+    @ConnectedSocket() client: Socket,
+    @MessageBody() data: { roomId: string },
+  ) {
+    client.join(data.roomId);
+    this.logger.log(`${client.data.user?.sub} joined room ${data.roomId}`);
+    return { status: "joined", roomId: data.roomId };
+  }
+
+  // handles typing indicator events
+  @SubscribeMessage("typing")
+  async handleTyping(
+    @ConnectedSocket() client: Socket,
+    @MessageBody() data: { recipientId: string; isTyping: boolean },
+  ) {
+    const recipientSocketId = this.userSocketMap.get(data.recipientId);
+
+    if (recipientSocketId) {
+      this.server.to(recipientSocketId).emit("typing", {
+        userId: client.data.user.sub,
+        isTyping: data.isTyping,
+      });
+    }
+  }
+
+  // helper method — other services can call this to send to a specific user
+  sendToUser(userId: string, event: string, data: any) {
+    const socketId = this.userSocketMap.get(userId);
+    if (socketId) {
+      this.server.to(socketId).emit(event, data);
+      return true; // user is online
+    }
+    return false; // user is offline
+  }
 }

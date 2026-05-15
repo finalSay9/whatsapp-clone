@@ -97,8 +97,17 @@ export class ChatGate
          //publish online status to redis
          await this.redisClient.set(`presence:${userId}`, 'online');
          await this.redisClient.publish(
-            
-         )
+            'presence',
+            JSON.stringify({userId, status: 'online'}),
+         );
+           this.logger.log(`Client connected: ${userId} (socket: ${client.id})`);
+      client.emit('connected', { message: 'Successfully connected' });
+
+    } catch (error) {
+      this.logger.warn(`Unauthorized connection attempt — disconnecting`);
+      client.disconnect();
     }
+    }
+      // runs when a client disconnects
 
 }

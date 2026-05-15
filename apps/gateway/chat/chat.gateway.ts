@@ -92,7 +92,13 @@ export class ChatGate
          const userId = result.payload.Sub
 
          //track the connection
-         user.userSocketMap.set(userId, client.id)
+         this.userSocketMap.set(userId, client.id)
+
+         //publish online status to redis
+         await this.redisClient.set(`presence:${userId}`, 'online');
+         await this.redisClient.publish(
+            
+         )
     }
 
 }

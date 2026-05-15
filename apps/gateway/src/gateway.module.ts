@@ -4,6 +4,8 @@ import { GatewayService } from './gateway.service';
 import { ClientsModule, Transport } from '@nestjs/microservices';
 import { ConfigModule } from '@nestjs/config';
 import { JwtGuard } from '../guards/guard.jwt';
+import { ChatGateway } from '../chat/chat.gateway';
+import { RedisModule } from '@app/common/redis/redis.module';
 
 
 
@@ -13,6 +15,7 @@ import { JwtGuard } from '../guards/guard.jwt';
       isGlobal: true,
       envFilePath: '.env'
     }),
+    RedisModule,
 
     //register the auth service as the TCP CLIENT
     ClientsModule.register([
@@ -27,6 +30,6 @@ import { JwtGuard } from '../guards/guard.jwt';
     ])
   ],
   controllers: [GatewayController],
-  providers: [GatewayService, JwtGuard],
+  providers: [GatewayService, JwtGuard, ChatGateway],
 })
 export class GatewayModule {}

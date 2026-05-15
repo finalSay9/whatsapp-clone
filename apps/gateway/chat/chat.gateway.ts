@@ -13,7 +13,7 @@ import { Inject, Logger, UnauthorizedException } from "@nestjs/common";
 import { ClientProxy } from "@nestjs/microservices";
 import { firstValueFrom } from "rxjs";
 import Redis from "ioredis";
-import { REDIS_CLIENT, REDIS_SUBSCRIBER } from "@app/common";
+import { REDIS_CLIENT, REDIS_SUBSCRIBER } from '@app/common';
 
 @WebSocketGateway({
   cors: {

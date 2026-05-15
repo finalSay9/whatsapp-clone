@@ -109,5 +109,18 @@ export class ChatGate
     }
     }
       // runs when a client disconnects
+    async handleDisconnect(client: Socket) {
+        const userId = client.data.user?.sub
+        
+        iff (userId) {
+      // remove from socket map
+      this.userSocketMap.delete(userId);
+
+      // update presence in Redis
+      await this.redisClient.set(
+        `presence:${userId}`,
+        Date.now().toString(), // store last seen timestamp
+      );
+    }
 
 }

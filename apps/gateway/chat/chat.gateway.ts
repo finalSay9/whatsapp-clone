@@ -77,6 +77,22 @@ export class ChatGate
          if(!token) {
             throw new UnauthorizedException('No Token Provided')
          }
+
+         //verify token with auth over tcp
+         const result = await firstValueFrom(
+            this.authClient.send({cmd: 'verify_token'}, {token})
+         )
+
+         if (!result.valid) {
+           throw new UnauthorizedException("Invalid token");
+         }
+
+         //attach user to socket
+         client.user.data = result.payload
+         const userId = result.payload.Sub
+
+         //track the connection
+         user.userSocketMap.set(userId, client.id)
     }
 
 }

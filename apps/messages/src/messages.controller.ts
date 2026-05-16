@@ -1,12 +1,12 @@
 import { Controller, Get } from '@nestjs/common';
+import { MessagePattern, Payload } from '@nestjs/microservices';
 import { MessagesService } from './messages.service';
 
 @Controller()
 export class MessagesController {
   constructor(private readonly messagesService: MessagesService) {}
 
-  @Get()
-  getHello(): string {
-    return this.messagesService.getHello();
-  }
+  //gateway sends : new message
+  @MessagePattern({cmd : 'new message'})
+  message(@Payload() data:)
 }

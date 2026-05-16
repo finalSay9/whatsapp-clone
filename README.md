@@ -1,4 +1,5 @@
 # whatsapp-clone
+#Real-time messaging between two users over WebSocket with Redis pub/sub in the #middle. That is genuinely impressive work.
 ```mermaid
 flowchart TD
     Client["Client Apps (Web / Mobile)"]

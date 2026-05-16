@@ -22,7 +22,6 @@ model User {
   receivedMessages Message[] @relation("ReceivedMessages")
 }
 
-
 model Message {
   id          String   @id @default(uuid())
   content     String
@@ -33,19 +32,7 @@ model Message {
   createdAt   DateTime @default(now())
   isRead      Boolean  @default(false)
 
-  // Sender relationship
-  sender User @relation(
-    "SentMessages",
-    fields: [senderId],
-    references: [id],
-    onDelete: Cascade
-  )
+  sender User @relation("SentMessages", fields: [senderId], references: [id], onDelete: Cascade)
 
-  // Recipient relationship
-  recipient User @relation(
-    "ReceivedMessages",
-    fields: [recipientId],
-    references: [id],
-    onDelete: Cascade
-  )
+  recipient User @relation("ReceivedMessages", fields: [recipientId], references: [id], onDelete: Cascade)
 }

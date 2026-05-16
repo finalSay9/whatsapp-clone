@@ -7,7 +7,7 @@ export class MessagesController {
   constructor(private readonly messagesService: MessagesService) {}
 
   //gateway sends : new message
-  @MessagePattern({cmd : 'new message'})
+  @MessagePattern({cmd : 'save message'})
   message(@Payload() data: {content: string; senderId: string; recipientId: string}) {
     return this.messagesService.createMessage(data)
 

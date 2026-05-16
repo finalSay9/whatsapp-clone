@@ -8,5 +8,8 @@ export class MessagesController {
 
   //gateway sends : new message
   @MessagePattern({cmd : 'new message'})
-  message(@Payload() data:)
+  message(@Payload() data: {content: string; senderId: string; recipientId: string}) {
+    return this.messagesService.createMessage(data)
+
+  }
 }

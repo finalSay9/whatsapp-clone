@@ -28,6 +28,14 @@ import { RedisModule } from '@app/common/redis/redis.module';
           host: 'localhost',
           port: 3006
         }
+      },
+      {
+        name: 'MESSAGES_SERVICE',
+        transport: Transport.TCP,
+        options: {
+          host: 'localhost',
+          port: 3009
+        }
       }
     ])
   ],

@@ -1,0 +1,50 @@
+<!DOCTYPE html>
+<html>
+<head><title>WS Test</title></head>
+<body>
+<script src="https://cdn.socket.io/4.7.2/socket.io.min.js"></script>
+<script>
+  // paste your JWT token here from the login response
+  const token = 'YOUR_JWT_TOKEN_HERE';
+
+  const socket = io('http://localhost:3008/chat', {
+    auth: { token }
+  });
+
+  socket.on('connect', () => {
+    console.log('Connected! Socket ID:', socket.id);
+  });
+
+  socket.on('connected', (data) => {
+    console.log('Server says:', data.message);
+  });
+
+  socket.on('new_message', (data) => {
+    console.log('New message received:', data);
+  });
+
+  socket.on('typing', (data) => {
+    console.log('Typing event:', data);
+  });
+
+  socket.on('disconnect', () => {
+    console.log('Disconnected');
+  });
+
+  // test sending a message
+  // replace with a real userId from your database
+  function sendMessage(recipientId, content) {
+    socket.emit('sendMessage', { recipientId, content }, (response) => {
+      console.log('Message sent:', response);
+    });
+  }
+
+  // expose to browser console for testing
+  window.sendMessage = sendMessage;
+  window.socket = socket;
+</script>
+<h1>Open browser console to test</h1>
+<p>Commands available in console:</p>
+<code>sendMessage('recipient-user-id', 'Hello!')</code>
+</body>
+</html>

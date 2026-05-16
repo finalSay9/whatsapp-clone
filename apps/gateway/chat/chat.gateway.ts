@@ -63,6 +63,7 @@ export class ChatGateway
     });
   }
 
+
   // runs when a client connects
   async handleConnection(client: Socket) {
     try {

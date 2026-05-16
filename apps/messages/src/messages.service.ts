@@ -15,7 +15,7 @@ export class MessagesService {
     senderId: string;
     recipientId: string;
   }) {
-    const message = await this.prisma.message.create({
+    const message = await this.prisma.messages.create({
       data: {
         content: data.content,
         senderId: data.senderId,

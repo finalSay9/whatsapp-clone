@@ -1,50 +1,110 @@
 <!DOCTYPE html>
 <html>
-<head><title>WS Test</title></head>
+<head>
+  <title>WhatsApp WS Test</title>
+  <style>
+    body { font-family: Arial; padding: 20px; background: #111; color: #0f0; }
+    #log { background: #000; padding: 15px; height: 400px; overflow-y: auto; border-radius: 8px; }
+    input { padding: 8px; width: 300px; margin: 5px; }
+    button { padding: 8px 16px; background: #25d366; color: white; border: none; border-radius: 4px; cursor: pointer; }
+  </style>
+</head>
 <body>
+
+<h2>WhatsApp Clone — WebSocket Tester</h2>
+
+<div>
+  <input id="token" placeholder="Paste JWT token here" style="width:500px"/>
+  <button onclick="connect()">Connect</button>
+</div>
+
+<br/>
+
+<div>
+  <input id="recipientId" placeholder="Recipient User ID"/>
+  <input id="messageContent" placeholder="Type a message..."/>
+  <button onclick="sendMsg()">Send Message</button>
+</div>
+
+<br/>
+
+<div id="log"></div>
+
 <script src="https://cdn.socket.io/4.7.2/socket.io.min.js"></script>
 <script>
-  // paste your JWT token here from the login response
-  const token = 'YOUR_JWT_TOKEN_HERE';
+  let socket = null;
 
-  const socket = io('http://localhost:3008/chat', {
-    auth: { token }
-  });
+  function log(msg, color = '#0f0') {
+    const div = document.getElementById('log');
+    const time = new Date().toLocaleTimeString();
+    div.innerHTML += `<div style="color:${color}">[${time}] ${msg}</div>`;
+    div.scrollTop = div.scrollHeight;
+  }
 
-  socket.on('connect', () => {
-    console.log('Connected! Socket ID:', socket.id);
-  });
+  function connect() {
+    const token = document.getElementById('token').value.trim();
 
-  socket.on('connected', (data) => {
-    console.log('Server says:', data.message);
-  });
+    if (!token) {
+      log('❌ Please paste a JWT token first', '#f00');
+      return;
+    }
 
-  socket.on('new_message', (data) => {
-    console.log('New message received:', data);
-  });
+    if (socket) {
+      socket.disconnect();
+    }
 
-  socket.on('typing', (data) => {
-    console.log('Typing event:', data);
-  });
+    log('🔄 Connecting...');
 
-  socket.on('disconnect', () => {
-    console.log('Disconnected');
-  });
+    socket = io('http://localhost:3007/chat', {
+      auth: { token }
+    });
 
-  // test sending a message
-  // replace with a real userId from your database
-  function sendMessage(recipientId, content) {
-    socket.emit('sendMessage', { recipientId, content }, (response) => {
-      console.log('Message sent:', response);
+    socket.on('connect', () => {
+      log(`✅ Socket connected! ID: ${socket.id}`, '#0f0');
+    });
+
+    socket.on('connected', (data) => {
+      log(`🎉 Server: ${data.message}`, '#25d366');
+    });
+
+    socket.on('new_message', (data) => {
+      log(`📩 New message from ${data.senderEmail}: "${data.content}"`, '#00bfff');
+    });
+
+    socket.on('typing', (data) => {
+      log(`✏️ User ${data.userId} is ${data.isTyping ? 'typing...' : 'stopped typing'}`, '#ffff00');
+    });
+
+    socket.on('disconnect', () => {
+      log('🔴 Disconnected from server', '#f00');
+    });
+
+    socket.on('connect_error', (err) => {
+      log(`❌ Connection error: ${err.message}`, '#f00');
     });
   }
 
-  // expose to browser console for testing
-  window.sendMessage = sendMessage;
-  window.socket = socket;
+  function sendMsg() {
+    if (!socket || !socket.connected) {
+      log('❌ Not connected. Click Connect first', '#f00');
+      return;
+    }
+
+    const recipientId = document.getElementById('recipientId').value.trim();
+    const content = document.getElementById('messageContent').value.trim();
+
+    if (!recipientId || !content) {
+      log('❌ Fill in both Recipient ID and message', '#f00');
+      return;
+    }
+
+    socket.emit('sendMessage', { recipientId, content }, (response) => {
+      log(`✅ Message sent! Status: ${response.status} at ${response.timestamp}`, '#25d366');
+    });
+
+    document.getElementById('messageContent').value = '';
+  }
 </script>
-<h1>Open browser console to test</h1>
-<p>Commands available in console:</p>
-<code>sendMessage('recipient-user-id', 'Hello!')</code>
+
 </body>
 </html>

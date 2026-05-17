@@ -1,14 +1,10 @@
-import {
-  Injectable,
-  ConflictException,
-  UnauthorizedException,
-} from "@nestjs/common";
+import { Injectable } from "@nestjs/common";
 import { PrismaService } from "@app/common";
-import { ConfigService } from "@nestjs/config";
+
 
 @Injectable()
 export class MessagesService {
-  constructor(private prisma: PrismaService, private config: ConfigService) {}
+  constructor(private prisma: PrismaService) {}
 
   async createMessage(data: {
     content: string;

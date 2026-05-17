@@ -34,6 +34,7 @@ export class ChatGateway
 
   constructor(
     @Inject("AUTH_SERVICE") private readonly authClient: ClientProxy,
+    @Inject("MESSAGES_SERVICE") private readonly messagesClient: ClientProxy,
     @Inject(REDIS_CLIENT) private readonly redisClient: Redis,
     @Inject(REDIS_SUBSCRIBER) private readonly redisSub: Redis,
   ) {}
@@ -62,7 +63,6 @@ export class ChatGateway
       }
     });
   }
-
 
   // runs when a client connects
   async handleConnection(client: Socket) {

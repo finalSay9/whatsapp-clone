@@ -31,11 +31,13 @@ export class MessagesService {
       where: {
         OR: [
           //MESSAGES A SENT TO B
-          {senderId: data.userId, recipientId: data.recipientId},
+          { senderId: data.userId, recipientId: data.recipientId },
           //messages b to a
           { senderId: data.recipientId, recipientId: data.userId },
-        ]
-      }
-    })
+        ],
+      },
+      orderBy: { createdAt: "asc" },
+    });
+      return messages;
   }
 }

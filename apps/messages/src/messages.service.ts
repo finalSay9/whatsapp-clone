@@ -24,4 +24,11 @@ export class MessagesService {
       data: message,
     };
   }
+
+  //fetch conversation history between two users
+  async getMessages(data: {userId: string; recipientId: string}) {
+    const messages = await this.prisma.message.findMany({
+      where: {}
+    })
+  }
 }

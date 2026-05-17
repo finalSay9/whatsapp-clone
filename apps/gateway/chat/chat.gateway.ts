@@ -138,7 +138,17 @@ export class ChatGateway
   ) {
     const sender = client.data.user;
 
+    // 1. save message to database first
+  const saved = await firstValueFrom(
+    this.messagesClient.send({ cmd: 'save_message' }, {
+      content: data.content,
+      senderId: sender.sub,
+      recipientId: data.recipientId,
+    }),
+  );
+
     const message = {
+      ...saved.data,
       senderId: sender.sub,
       senderEmail: sender.email,
       recipientId: data.recipientId,

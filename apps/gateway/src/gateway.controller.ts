@@ -6,7 +6,8 @@ import {
   HttpStatus,
   Inject,
   Post,
-  UseGuards
+  UseGuards,
+  Param
  } from '@nestjs/common';
 import { ClientProxy } from '@nestjs/microservices';
 import { GatewayService } from './gateway.service';
@@ -23,6 +24,7 @@ import { JwtGuard } from '../guards/guard.jwt';
 export class GatewayController {
   constructor(
     @Inject("AUTH_SERVICE") private readonly authClient: ClientProxy,
+    @Inject("MESSAGES_SERVICE") private readonly messagesClient: ClientProxy,
     private readonly gatewayService: GatewayService,
   ) {}
 
@@ -59,5 +61,21 @@ export class GatewayController {
       message: "You are authenticated",
       user,
     };
+  }
+
+  @Get("messages/:recipientId")
+  @UseGuards(JwtGuard)
+  @ApiBearerAuth("access-token")
+  @ApiOperation({ summary: "Get message history with a user" })
+  getMessages(
+    @Param("recipientId") recipientId: string,
+    @GetUser("sub") userId: string,
+  ) {
+    return firstValueFrom(
+      this.messagesClient.send(
+        { cmd: "get_messages" },
+        { userId, recipientId },
+      ),
+    );
   }
 }

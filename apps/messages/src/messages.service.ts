@@ -1,5 +1,6 @@
 import { Injectable } from "@nestjs/common";
 import { PrismaService } from "@app/common";
+import { RpcException } from '@nestjs/microservices'
 
 
 @Injectable()
@@ -11,7 +12,8 @@ export class MessagesService {
     senderId: string;
     recipientId: string;
   }) {
-    const message = await this.prisma.message.create({
+    try {
+      const message = await this.prisma.message.create({
       data: {
         content: data.content,
         senderId: data.senderId,
@@ -23,6 +25,13 @@ export class MessagesService {
       message: "message sent successfully",
       data: message,
     };
+    } catch (error) {
+      throw new RpcException({
+        statusCode: 500,
+        message: 'failed to save messsage'
+      })
+      
+    }
   }
 
   //fetch conversation history between two users

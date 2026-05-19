@@ -4,6 +4,7 @@ import {
   UnauthorizedException,
 } from "@nestjs/common";
 import { JwtService } from "@nestjs/jwt";
+import { RpcException } from '@nestjs/microservices';
 import { ConfigService } from "@nestjs/config";
 import { PrismaService } from '@app/common';
 import * as bcrypt from "bcrypt";
@@ -23,7 +24,10 @@ export class AuthService {
     });
 
     if (existing) {
-      throw new ConflictException("Email already in use");
+      throw new RpcException({
+        statusCode: 409,
+        message: 'Email Already In Use'
+      });
     }
 
     // 2. hash the password

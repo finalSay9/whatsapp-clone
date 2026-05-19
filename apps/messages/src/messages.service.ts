@@ -1,7 +1,7 @@
+// apps/messages/src/messages.service.ts
 import { Injectable } from "@nestjs/common";
+import { RpcException } from "@nestjs/microservices";
 import { PrismaService } from "@app/common";
-import { RpcException } from '@nestjs/microservices'
-
 
 @Injectable()
 export class MessagesService {
@@ -14,39 +14,64 @@ export class MessagesService {
   }) {
     try {
       const message = await this.prisma.message.create({
-      data: {
-        content: data.content,
-        senderId: data.senderId,
-        recipientId: data.recipientId,
-      },
-    });
+        data: {
+          content: data.content,
+          senderId: data.senderId,
+          recipientId: data.recipientId,
+        },
+      });
 
-    return {
-      message: "message sent successfully",
-      data: message,
-    };
+      return {
+        message: "Message sent successfully",
+        data: message,
+      };
     } catch (error) {
+      // 👇 catch unexpected database errors and wrap them
       throw new RpcException({
         statusCode: 500,
-        message: 'failed to save messsage'
-      })
-      
+        message: "Failed to save message",
+      });
     }
   }
 
-  //fetch conversation history between two users
-  async getMessages(data: {userId: string; recipientId: string}) {
-    const messages = await this.prisma.message.findMany({
-      where: {
-        OR: [
-          //MESSAGES A SENT TO B
-          { senderId: data.userId, recipientId: data.recipientId },
-          //messages b to a
-          { senderId: data.recipientId, recipientId: data.userId },
-        ],
-      },
-      orderBy: { createdAt: "asc" },
-    });
+  async getMessages(data: { userId: string; recipientId: string }) {
+    try {
+      const messages = await this.prisma.message.findMany({
+        where: {
+          OR: [
+            { senderId: data.userId, recipientId: data.recipientId },
+            { senderId: data.recipientId, recipientId: data.userId },
+          ],
+        },
+        orderBy: { createdAt: "asc" },
+      });
+
       return messages;
+    } catch (error) {
+      throw new RpcException({
+        statusCode: 500,
+        message: "Failed to fetch messages",
+      });
+    }
+  }
+
+  async markAsRead(data: { senderId: string; recipientId: string }) {
+    try {
+      await this.prisma.message.updateMany({
+        where: {
+          senderId: data.senderId,
+          recipientId: data.recipientId,
+          isRead: false,
+        },
+        data: { isRead: true },
+      });
+
+      return { success: true };
+    } catch (error) {
+      throw new RpcException({
+        statusCode: 500,
+        message: "Failed to mark messages as read",
+      });
+    }
   }
 }

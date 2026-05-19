@@ -33,7 +33,7 @@ export class MessagesService {
       });
     }
   }
-
+//fetching the messages FROM A to B and B to A
   async getMessages(data: { userId: string; recipientId: string }) {
     try {
       const messages = await this.prisma.message.findMany({

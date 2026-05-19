@@ -9,17 +9,23 @@ import {
   OnGatewayInit,
 } from "@nestjs/websockets";
 import { Server, Socket } from "socket.io";
-import { Inject, Logger, UnauthorizedException } from "@nestjs/common";
+import { Inject, Logger, UnauthorizedException, UseFilters } from "@nestjs/common";
 import { ClientProxy } from "@nestjs/microservices";
 import { firstValueFrom } from "rxjs";
 import Redis from "ioredis";
 import { REDIS_CLIENT, REDIS_SUBSCRIBER } from '@app/common';
+import { WsExceptionFilter } from "../exceptions/ws-exceptions.filter";
 
+
+
+
+
+@UseFilters(WsExceptionFilter)
 @WebSocketGateway({
   cors: {
-    origin: "*", // in production lock this down
+    origin: "*", 
   },
-  namespace: "chat", // ws://localhost:3000/chat
+  namespace: "chat", 
 })
 export class ChatGateway
   implements OnGatewayInit, OnGatewayConnection, OnGatewayDisconnect
@@ -139,13 +145,16 @@ export class ChatGateway
     const sender = client.data.user;
 
     // 1. save message to database first
-  const saved = await firstValueFrom(
-    this.messagesClient.send({ cmd: 'save_message' }, {
-      content: data.content,
-      senderId: sender.sub,
-      recipientId: data.recipientId,
-    }),
-  );
+    const saved = await firstValueFrom(
+      this.messagesClient.send(
+        { cmd: "save_message" },
+        {
+          content: data.content,
+          senderId: sender.sub,
+          recipientId: data.recipientId,
+        },
+      ),
+    );
 
     const message = {
       ...saved.data,

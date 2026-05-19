@@ -2,17 +2,23 @@ import { NestFactory } from '@nestjs/core';
 import { GatewayModule } from './gateway.module';
 import { ValidationPipe } from '@nestjs/common';
 import { DocumentBuilder, SwaggerModule } from '@nestjs/swagger';
+import { RpcExceptionFilter } from '../exceptions/rpc-exceptions.filter';
+import { AllExceptionsFilter } from '../exceptions/all-exeptions.filter';
 
 
 async function bootstrap() {
   const app = await NestFactory.create(GatewayModule);
 
   app.enableCors({
-    origin: "*", // 👈 add this
+    origin: "*",
     methods: ["GET", "POST"],
   });
 
-  
+  // apply filters in order — most specific first, catch-all last
+  app.useGlobalFilters(
+    new AllExceptionsFilter(),
+    new RpcExceptionFilter(), 
+  );
 
   //validation pipe
   app.useGlobalPipes(

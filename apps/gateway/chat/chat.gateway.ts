@@ -15,6 +15,8 @@ import { firstValueFrom } from "rxjs";
 import Redis from "ioredis";
 import { REDIS_CLIENT, REDIS_SUBSCRIBER } from '@app/common';
 import { WsExceptionFilter } from "../exceptions/ws-exceptions.filter";
+import { wsValidate } from "./dto/ws-validate.pipe";
+import { SendMessageDto } from "./dto/send-message.dto";
 
 
 
@@ -140,8 +142,12 @@ export class ChatGateway
   @SubscribeMessage("sendMessage")
   async handleSendMessage(
     @ConnectedSocket() client: Socket,
-    @MessageBody() data: { recipientId: string; content: string },
+    @MessageBody() data: unknown,
   ) {
+    //validate the data
+    const dto = wsValidate(SendMessageDto, data)
+
+
     const sender = client.data.user;
 
     // 1. save message to database first

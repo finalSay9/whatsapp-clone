@@ -17,6 +17,7 @@ import { REDIS_CLIENT, REDIS_SUBSCRIBER } from '@app/common';
 import { WsExceptionFilter } from "../exceptions/ws-exceptions.filter";
 import { wsValidate } from "./dto/ws-validate.pipe";
 import { SendMessageDto } from "./dto/send-message.dto";
+import { JoinRoomDto } from "./dto/join-room.dto";
 
 
 
@@ -145,19 +146,18 @@ export class ChatGateway
     @MessageBody() data: unknown,
   ) {
     //validate the data
-    const dto = wsValidate(SendMessageDto, data)
+    const dto = await wsValidate(SendMessageDto, data)
 
 
     const sender = client.data.user;
 
     // 1. save message to database first
     const saved = await firstValueFrom(
-      this.messagesClient.send(
-        { cmd: "save_message" },
+      this.messagesClient.send({ cmd: "save_message" },
         {
-          content: data.content,
+          content: dto.content,
           senderId: sender.sub,
-          recipientId: data.recipientId,
+          recipientId: dto.recipientId,
         },
       ),
     );
@@ -166,15 +166,15 @@ export class ChatGateway
       ...saved.data,
       senderId: sender.sub,
       senderEmail: sender.email,
-      recipientId: data.recipientId,
-      content: data.content,
+      recipientId: dto.recipientId,
+      content:dto.content,
       timestamp: new Date().toISOString(),
     };
 
     // publish to Redis — any gateway instance will pick this up
     await this.redisClient.publish("new_message", JSON.stringify(message));
 
-    this.logger.log(`Message from ${sender.sub} to ${data.recipientId}`);
+    this.logger.log(`Message from ${sender.sub} to ${dto.recipientId}`);
 
     // confirm to sender
     return { status: "sent", timestamp: message.timestamp };
@@ -182,13 +182,16 @@ export class ChatGateway
 
   // handles 'joinRoom' events — for group chats later
   @SubscribeMessage("joinRoom")
-  handleJoinRoom(
+  async handleJoinRoom(
     @ConnectedSocket() client: Socket,
-    @MessageBody() data: { roomId: string },
+    @MessageBody() data: unknown,
   ) {
-    client.join(data.roomId);
-    this.logger.log(`${client.data.user?.sub} joined room ${data.roomId}`);
-    return { status: "joined", roomId: data.roomId };
+    //validate the room id
+    const dto = await wsValidate(JoinRoomDto, data);
+
+    client.join(dto.roomId);
+    this.logger.log(`${client.data.user?.sub} joined room ${dto.roomId}`);
+    return { status: "joined", roomId: dto.roomId };
   }
 
   // handles typing indicator events

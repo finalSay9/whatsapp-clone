@@ -25,13 +25,20 @@
   <input id="messageContent" placeholder="Type a message..."/>
   <button onclick="sendMsg()">Send Message</button>
 </div>
-
+<button onclick="sendBadMessage()">Send Bad Message (test validation)</button>
 <br/>
 
 <div id="log"></div>
 
 <script src="https://cdn.socket.io/4.7.2/socket.io.min.js"></script>
 <script>
+
+  function sendBadMessage() {
+  // missing recipientId, empty content
+  socket.emit('sendMessage', { content: '' }, (response) => {
+    console.log('Response:', response);
+  });
+}
   let socket = null;
 
   function log(msg, color = '#0f0') {
@@ -104,6 +111,9 @@
 
     document.getElementById('messageContent').value = '';
   }
+  socket.on('error', (data) => {
+  log(`🚨 Validation error: ${JSON.stringify(data.message)}`, '#ff4444');
+});
 </script>
 
 </body>

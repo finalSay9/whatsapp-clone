@@ -18,6 +18,7 @@ import { WsExceptionFilter } from "../exceptions/ws-exceptions.filter";
 import { wsValidate } from "./dto/ws-validate.pipe";
 import { SendMessageDto } from "./dto/send-message.dto";
 import { JoinRoomDto } from "./dto/join-room.dto";
+import { TypingDto } from "./dto/typing.dto";
 
 
 
@@ -198,14 +199,16 @@ export class ChatGateway
   @SubscribeMessage("typing")
   async handleTyping(
     @ConnectedSocket() client: Socket,
-    @MessageBody() data: { recipientId: string; isTyping: boolean },
+    @MessageBody() data: unknown,
   ) {
-    const recipientSocketId = this.userSocketMap.get(data.recipientId);
+     //  validate
+    const dto = await wsValidate(TypingDto, data);
+    const recipientSocketId = this.userSocketMap.get(dto.recipientId);
 
     if (recipientSocketId) {
       this.server.to(recipientSocketId).emit("typing", {
         userId: client.data.user.sub,
-        isTyping: data.isTyping,
+        isTyping: dto.isTyping,
       });
     }
   }

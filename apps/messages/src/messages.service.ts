@@ -2,6 +2,7 @@
 import { Injectable } from "@nestjs/common";
 import { RpcException } from "@nestjs/microservices";
 import { PrismaService } from "@app/common";
+import { PaginationDto } from "../dto/pagination.dto";
 
 @Injectable()
 export class MessagesService {
@@ -34,18 +35,24 @@ export class MessagesService {
     }
   }
 //fetching the messages FROM A to B and B to A
-  async getMessages(data: { userId: string; recipientId: string }) {
+  async getMessages(
+    data: { userId: string; recipientId: string },
+    paginationDto: PaginationDto) {
+      
     try {
-      const messages = await this.prisma.message.findMany({
-        where: {
-          OR: [
-            { senderId: data.userId, recipientId: data.recipientId },
-            { senderId: data.recipientId, recipientId: data.userId },
-          ],
-        },
-        orderBy: { createdAt: "asc" },
-      });
-
+      const {page, limit} = paginationDto;
+      const skip = (page -1) * limit
+      const [messages,total] = await this.prisma.$transaction([
+        this.prisma.message.findMany({
+          where: {
+            OR: [
+              { senderId: data.userId, recipientId: data.recipientId},
+              { senderId: data.recipientId, recipientId: data.userId }
+            ]
+          },
+          orderBy: { createdAt: "asc" },
+        })
+      ])
       return messages;
     } catch (error) {
       throw new RpcException({

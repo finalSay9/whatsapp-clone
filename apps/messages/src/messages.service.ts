@@ -42,7 +42,7 @@ export class MessagesService {
     try {
       const {page, limit} = paginationDto;
       const skip = (page -1) * limit
-      const [messages,total] = await this.prisma.$transaction([
+      const [messages,total] = await Promise.all([
         this.prisma.message.findMany({
           where: {
             OR: [
@@ -51,9 +51,28 @@ export class MessagesService {
             ]
           },
           orderBy: { createdAt: "asc" },
+          skip: skip,
+          take: limit,
+        }),
+        this.prisma.message.count({
+          where: {
+            OR: [
+              { senderId: data.userId, recipientId: data.recipientId},
+              { senderId: data.recipientId, recipientId: data.userId }
+            ]
+          }
         })
       ])
-      return messages;
+      return {
+        data: messages,
+        meta: {
+          totalItems: total,
+          itemsPerPage: limit,
+          totalPages: Math.ceil(total / limit),
+          currentPage: page || 1
+        }
+
+      };
     } catch (error) {
       throw new RpcException({
         statusCode: 500,

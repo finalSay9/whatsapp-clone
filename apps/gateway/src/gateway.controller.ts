@@ -33,18 +33,29 @@ export class GatewayController {
     private readonly gatewayService: GatewayService,
   ) {}
 
+  /**
+   * registering a 
+   * user
+   */
   @Post("register")
   @ApiOperation({ summary: "Register a new user" })
   @ApiResponse({ status: 201, description: "User registered successfully" })
   @ApiResponse({ status: 409, description: "Email already in use" })
   async register(@Body() dto: RegisterDto) {
-    // send message to Auth Service and wait for response
+    /**
+     * send message to Auth Service
+     *  and wait for response
+     */
     return firstValueFrom(
       this.authClient.send({ cmd: "register" }, dto),
       //                👆 message pattern   👆 payload
     );
   }
 
+
+  /**
+   * loggin in a user
+   */
   @Post("login")
   @HttpCode(HttpStatus.OK)
   @ApiOperation({ summary: "Login with email and password" })

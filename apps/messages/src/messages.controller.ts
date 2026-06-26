@@ -7,7 +7,10 @@ import { PaginationDto } from '../dto/pagination.dto';
 export class MessagesController {
   constructor(private readonly messagesService: MessagesService) {}
 
-  //gateway sends : new message
+  /**
+   * //gateway sends :
+   *  new message
+   */
   @MessagePattern({ cmd: "save_message" })
   message(
     @Payload() data: { content: string; senderId: string; recipientId: string },

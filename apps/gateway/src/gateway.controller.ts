@@ -1,4 +1,4 @@
-import { 
+import {
   Controller,
   Get,
   Body,
@@ -7,17 +7,22 @@ import {
   Inject,
   Post,
   UseGuards,
-  Param
- } from '@nestjs/common';
-import { ClientProxy } from '@nestjs/microservices';
-import { GatewayService } from './gateway.service';
-import { ApiTags, ApiOperation, ApiResponse, ApiBearerAuth } from "@nestjs/swagger";
+  Param,
+} from "@nestjs/common";
+import { ClientProxy } from "@nestjs/microservices";
+import { GatewayService } from "./gateway.service";
+import {
+  ApiTags,
+  ApiOperation,
+  ApiResponse,
+  ApiBearerAuth,
+} from "@nestjs/swagger";
 import { firstValueFrom } from "rxjs";
 import { RegisterDto } from "./dto/register.dto";
 import { LoginDto } from "./dto/login.dto";
-import { GetUser } from '../decoarators/get-user.decorator';
-import { JwtGuard } from '../guards/guard.jwt';
-
+import { GetUser } from "../decoarators/get-user.decorator";
+import { JwtGuard } from "../guards/guard.jwt";
+import { PaginationDto } from "apps/messages/dto/pagination.dto";
 
 @ApiTags("Auth")
 @Controller("Auth")
@@ -70,11 +75,12 @@ export class GatewayController {
   getMessages(
     @Param("recipientId") recipientId: string,
     @GetUser("sub") userId: string,
+    @Body() paginationDto: PaginationDto,
   ) {
     return firstValueFrom(
       this.messagesClient.send(
         { cmd: "get_messages" },
-        { userId, recipientId },
+        { userId, recipientId, paginationDto },
       ),
     );
   }

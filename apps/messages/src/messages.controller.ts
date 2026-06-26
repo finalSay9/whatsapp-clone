@@ -1,6 +1,7 @@
 import { Controller, Get } from '@nestjs/common';
 import { MessagePattern, Payload } from '@nestjs/microservices';
 import { MessagesService } from './messages.service';
+import { PaginationDto } from '../dto/pagination.dto';
 
 @Controller()
 export class MessagesController {
@@ -16,8 +17,9 @@ export class MessagesController {
 
   // 👇 add these two patterns
   @MessagePattern({ cmd: "get_messages" })
-  getMessages(@Payload() data: { userId: string; recipientId: string }) {
-    return this.messagesService.getMessages(data);
+  getMessages(@Payload() data: { userId: string; recipientId: string },
+   @Payload() paginationDto: PaginationDto) {
+    return this.messagesService.getMessages(data, paginationDto);
   }
 
   

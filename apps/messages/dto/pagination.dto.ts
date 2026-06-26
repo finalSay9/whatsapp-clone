@@ -3,13 +3,13 @@ import { IsInt, IsOptional, Max, Min } from "class-validator";
 
 export class PaginationDto {
     @IsOptional()
-    @Type (() => number)
+    @Type (() => Number)
     @IsInt()
     @Min(1)
     page?: number;
 
     @IsOptional()
-    @Type (() => number)
+    @Type (() => Number)
     @IsInt()
     @Min(1)
     @Max(50)

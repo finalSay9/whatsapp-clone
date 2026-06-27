@@ -1,13 +1,23 @@
-// apps/messages/src/messages.service.ts
 import { Injectable } from "@nestjs/common";
 import { RpcException } from "@nestjs/microservices";
 import { PrismaService } from "@app/common";
 import { PaginationDto } from "../dto/pagination.dto";
 
+
 @Injectable()
 export class MessagesService {
+
+  /**
+   * injecting the db service
+   * the prisma service
+   */
   constructor(private prisma: PrismaService) {}
 
+
+  /**
+   * creating message
+   * a user sending a message
+   */
   async createMessage(data: {
     content: string;
     senderId: string;
@@ -27,7 +37,12 @@ export class MessagesService {
         data: message,
       };
     } catch (error) {
-      // 👇 catch unexpected database errors and wrap them
+      /**
+       * in case when saving 
+       * a message to data something an usual happened
+       * catch unexpected database
+       *  errors and wrap them
+       */
       throw new RpcException({
         statusCode: 500,
         message: "Failed to save message",

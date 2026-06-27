@@ -39,7 +39,10 @@ export class ChatGateway
 
   private logger = new Logger("ChatGateway");
 
-  // track which userId maps to which socketId
+  /**
+   *  track which userId
+   *  maps to which socketId
+   */
   private userSocketMap = new Map<string, string>();
 
   constructor(
@@ -49,6 +52,11 @@ export class ChatGateway
     @Inject(REDIS_SUBSCRIBER) private readonly redisSub: Redis,
   ) {}
 
+  /**
+   * implementing the
+   * init method
+   * from 3 hooks
+   */
   afterInit() {
     this.logger.log("WebSocket Gateway initialized");
 
